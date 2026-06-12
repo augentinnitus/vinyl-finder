@@ -1,5 +1,5 @@
 const cheerio = require("cheerio");
-const { USER_AGENT } = require("./utils");
+const { USER_AGENT, titleMatchesQuery } = require("./utils");
 
 const SHOP = {
   id: "plasticbomb",
@@ -8,7 +8,8 @@ const SHOP = {
 };
 
 async function searchPlasticBomb(query, limit = 12) {
-  const searchUrl = `${SHOP.baseUrl}/search/?qs=${encodeURIComponent(query.trim())}`;
+  const trimmed = query.trim();
+  const searchUrl = `${SHOP.baseUrl}/search/?qs=${encodeURIComponent(trimmed)}`;
   const response = await fetch(searchUrl, {
     headers: {
       "User-Agent": USER_AGENT,
@@ -47,7 +48,7 @@ async function searchPlasticBomb(query, limit = 12) {
     const link = root.find(".productbox-title a").first();
     const title = link.text().replace(/\s+/g, " ").trim();
     const href = link.attr("href");
-    if (!title || !href) return;
+    if (!title || !href || !titleMatchesQuery(title, trimmed)) return;
 
     const rawPrice =
       root.find(".productbox-price .second-range-price").first().text() ||
@@ -69,7 +70,7 @@ async function searchPlasticBomb(query, limit = 12) {
     shopName: SHOP.name,
     searchUrl: finalUrl,
     status: results.length ? "ok" : "empty",
-    message: results.length ? null : "Keine Vinyl-Treffer gefunden.",
+    message: results.length ? null : "Keine Vinyl-Treffer mit passendem Titel gefunden.",
     results,
   };
 }

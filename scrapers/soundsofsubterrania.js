@@ -1,5 +1,5 @@
 const cheerio = require("cheerio");
-const { fetchHtml, isVinylFormat } = require("./utils");
+const { fetchHtml, isVinylFormat, titleMatchesQuery } = require("./utils");
 
 const SHOP = {
   id: "soundsofsubterrania",
@@ -13,7 +13,8 @@ function isExcludedProduct(title = "") {
 }
 
 async function searchSoundsOfSubterrania(query, limit = 12) {
-  const searchUrl = `${SHOP.baseUrl}/?s=${encodeURIComponent(query.trim())}`;
+  const trimmed = query.trim();
+  const searchUrl = `${SHOP.baseUrl}/?s=${encodeURIComponent(trimmed)}`;
   const html = await fetchHtml(searchUrl);
   const $ = cheerio.load(html);
   const results = [];
@@ -26,6 +27,7 @@ async function searchSoundsOfSubterrania(query, limit = 12) {
     const title = link.text().replace(/\s+/g, " ").trim();
     const href = link.attr("href");
     if (!title || !href) return;
+    if (!titleMatchesQuery(title, trimmed)) return;
     if (isExcludedProduct(title) && !isVinylFormat(title)) return;
 
     results.push({
@@ -43,7 +45,7 @@ async function searchSoundsOfSubterrania(query, limit = 12) {
     shopName: SHOP.name,
     searchUrl,
     status: results.length ? "ok" : "empty",
-    message: results.length ? null : "Keine Vinyl-Treffer gefunden.",
+    message: results.length ? null : "Keine Vinyl-Treffer mit passendem Titel gefunden.",
     results,
   };
 }

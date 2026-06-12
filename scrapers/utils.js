@@ -33,6 +33,12 @@ function isVinylFormat(text = "") {
   return false;
 }
 
+function titleMatchesQuery(title = "", query = "") {
+  const normalizedQuery = query.trim().toLowerCase();
+  if (!normalizedQuery) return false;
+  return title.toLowerCase().includes(normalizedQuery);
+}
+
 function dedupeResults(items) {
   const seen = new Set();
   return items.filter((item) => {
@@ -47,5 +53,6 @@ module.exports = {
   USER_AGENT,
   fetchHtml,
   isVinylFormat,
+  titleMatchesQuery,
   dedupeResults,
 };

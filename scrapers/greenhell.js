@@ -1,5 +1,5 @@
 const cheerio = require("cheerio");
-const { fetchHtml, isVinylFormat } = require("./utils");
+const { fetchHtml, titleMatchesQuery } = require("./utils");
 
 const SHOP = {
   id: "greenhell",
@@ -8,7 +8,8 @@ const SHOP = {
 };
 
 async function searchGreenHell(query, limit = 12) {
-  const encoded = encodeURIComponent(query.trim());
+  const trimmed = query.trim();
+  const encoded = encodeURIComponent(trimmed);
   const searchUrl = `${SHOP.baseUrl}/?suche=${encoded}`;
   const html = await fetchHtml(searchUrl);
   const $ = cheerio.load(html);
@@ -21,7 +22,7 @@ async function searchGreenHell(query, limit = 12) {
     const link = root.find(".productbox-title a").first();
     const title = link.text().replace(/\s+/g, " ").trim();
     const href = link.attr("href");
-    if (!title || !href) return;
+    if (!title || !href || !titleMatchesQuery(title, trimmed)) return;
 
     const rawPrice =
       root.find(".productbox-price .second-range-price").first().text() ||
@@ -43,7 +44,7 @@ async function searchGreenHell(query, limit = 12) {
     shopName: SHOP.name,
     searchUrl,
     status: results.length ? "ok" : "empty",
-    message: results.length ? null : "Keine Vinyl-Treffer gefunden.",
+    message: results.length ? null : "Keine Vinyl-Treffer mit passendem Titel gefunden.",
     results,
   };
 }

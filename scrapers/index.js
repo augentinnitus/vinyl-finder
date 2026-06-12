@@ -5,6 +5,15 @@ const { searchKink } = require("./kink");
 const { searchPlasticBomb } = require("./plasticbomb");
 const { searchSoundsOfSubterrania } = require("./soundsofsubterrania");
 const { searchSabotage } = require("./sabotage");
+const { searchBisAufsMesser } = require("./bisaufsmesser");
+const { searchWanda } = require("./wanda");
+const { searchSoundflat } = require("./soundflat");
+const { searchGiveEmHell } = require("./giveemhell");
+const { searchGlitterhouse } = require("./glitterhouse");
+const { searchCoretex } = require("./coretex");
+const { searchRoughTrade } = require("./roughtrade");
+const { searchKulturkaufhaus } = require("./kulturkaufhaus");
+const { searchFlight13 } = require("./flight13");
 const { dedupeResults } = require("./utils");
 
 const SHOPS = [
@@ -15,6 +24,15 @@ const SHOPS = [
   { id: "plasticbomb", name: "Plastic Bomb", search: searchPlasticBomb },
   { id: "soundsofsubterrania", name: "Sounds of Subterrania", search: searchSoundsOfSubterrania },
   { id: "sabotage", name: "Sabotage Records", search: searchSabotage },
+  { id: "bisaufsmesser", name: "Bis Aufs Messer", search: searchBisAufsMesser },
+  { id: "wanda", name: "Wanda Records", search: searchWanda },
+  { id: "soundflat", name: "Soundflat", search: searchSoundflat },
+  { id: "giveemhell", name: "Give Em Hell", search: searchGiveEmHell },
+  { id: "glitterhouse", name: "Glitterhouse", search: searchGlitterhouse },
+  { id: "coretex", name: "Coretex Records", search: searchCoretex },
+  { id: "roughtrade", name: "Rough Trade", search: searchRoughTrade },
+  { id: "kulturkaufhaus", name: "Dussmann Kulturkaufhaus", search: searchKulturkaufhaus },
+  { id: "flight13", name: "Flight 13", search: searchFlight13 },
 ];
 
 async function searchAllShops(query, limitPerShop = 10) {

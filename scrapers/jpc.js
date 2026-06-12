@@ -1,5 +1,5 @@
 const cheerio = require("cheerio");
-const { fetchHtml, isVinylFormat } = require("./utils");
+const { isVinylFormat, titleMatchesQuery } = require("./utils");
 
 const SHOP = {
   id: "jpc",
@@ -8,8 +8,9 @@ const SHOP = {
 };
 
 async function searchJpc(query, limit = 12) {
+  const trimmed = query.trim();
   const body = new URLSearchParams({
-    fastsearch: query.trim(),
+    fastsearch: trimmed,
     pd_orderby: "score",
     rubric: "vinyl",
   });
@@ -50,6 +51,7 @@ async function searchJpc(query, limit = 12) {
     if (!isVinylFormat(medium || album)) return;
 
     const title = artist ? `${artist} – ${album}` : album;
+    if (!titleMatchesQuery(title, trimmed)) return;
 
     results.push({
       shop: SHOP.id,
@@ -66,7 +68,7 @@ async function searchJpc(query, limit = 12) {
     shopName: SHOP.name,
     searchUrl: finalUrl,
     status: results.length ? "ok" : "empty",
-    message: results.length ? null : "Keine Vinyl-Treffer gefunden.",
+    message: results.length ? null : "Keine Vinyl-Treffer mit passendem Titel gefunden.",
     results,
   };
 }
