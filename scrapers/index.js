@@ -8,7 +8,6 @@ const { searchSabotage } = require("./sabotage");
 const { searchBisAufsMesser } = require("./bisaufsmesser");
 const { searchWanda } = require("./wanda");
 const { searchSoundflat } = require("./soundflat");
-const { searchGiveEmHell } = require("./giveemhell");
 const { searchGlitterhouse } = require("./glitterhouse");
 const { searchCoretex } = require("./coretex");
 const { searchRoughTrade } = require("./roughtrade");
@@ -27,7 +26,6 @@ const SHOPS = [
   { id: "bisaufsmesser", name: "Bis Aufs Messer", search: searchBisAufsMesser },
   { id: "wanda", name: "Wanda Records", search: searchWanda },
   { id: "soundflat", name: "Soundflat", search: searchSoundflat },
-  { id: "giveemhell", name: "Give Em Hell", search: searchGiveEmHell },
   { id: "glitterhouse", name: "Glitterhouse", search: searchGlitterhouse },
   { id: "coretex", name: "Coretex Records", search: searchCoretex },
   { id: "roughtrade", name: "Rough Trade", search: searchRoughTrade },
