@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vinyl Finder – Schallplatten in Mailorder-Shops finden</title>
+    <meta
+      name="description"
+      content="Suche nach Bands und finde Vinyl-Angebote bei Green Hell, jpc.de, HHV, Kink Records, Plastic Bomb und weiteren Mailorder-Shops."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,400&family=Instrument+Serif:ital@0;1&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="noise" aria-hidden="true"></div>
+
+    <header class="hero">
+      <div class="hero__badge">Schallplatten-Mailorder</div>
+      <h1>Vinyl Finder</h1>
+      <p class="hero__lead">
+        Suche nach einer Band und finde passende Vinyl-Angebote bei deutschen
+        Mailorder-Shops – mit direktem Link zum Angebot.
+      </p>
+
+      <form id="search-form" class="search" autocomplete="off">
+        <label class="sr-only" for="band-input">Band oder Künstler</label>
+        <input
+          id="band-input"
+          name="q"
+          type="search"
+          placeholder="z. B. Metallica, Die Toten Hosen, Khruangbin…"
+          required
+          autofocus
+        />
+        <button type="submit" id="search-button">Suchen</button>
+      </form>
+
+      <div class="shop-tags" aria-label="Durchsuchte Shops">
+        <span>Green Hell</span>
+        <span>jpc.de</span>
+        <span>HHV</span>
+        <span>Kink Records</span>
+        <span>Plastic Bomb</span>
+        <span>Sounds of Subterrania</span>
+        <span>Sabotage Records</span>
+      </div>
+    </header>
+
+    <main class="container">
+      <section id="status" class="status" hidden></section>
+      <section id="results" class="results" hidden>
+        <div class="results__header">
+          <h2 id="results-title">Treffer</h2>
+          <p id="results-meta"></p>
+        </div>
+        <div id="shop-panels" class="shop-panels"></div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>
+        Hinweis: Verfügbarkeit und Preise stammen von den Shop-Seiten und können
+        sich ändern. HHV wird als Direktlink angeboten, da der Shop
+        automatisierte Abfragen blockiert.
+      </p>
+    </footer>
+
+    <script src="/app.js" defer></script>
+  </body>
+</html>
