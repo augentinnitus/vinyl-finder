@@ -1,5 +1,5 @@
 const cheerio = require("cheerio");
-const { fetchHtml, isVinylFormat } = require("./utils");
+const { fetchHtml } = require("./utils");
 
 const SHOP = {
   id: "kink",
@@ -14,10 +14,10 @@ function titleFromKinkUrl(url = "") {
 }
 
 async function searchKink(query, limit = 12) {
+  const queryLower = query.trim().toLowerCase();
   const params = new URLSearchParams({
     main_page: "advanced_search_result",
     keywords: query.trim(),
-    search_in_description: "1",
     categories_id: "22",
     inc_subcat: "1",
   });
@@ -35,15 +35,13 @@ async function searchKink(query, limit = 12) {
       const details = $(el);
       const href = details.attr("href");
       if (!href || seen.has(href)) return;
-
-      const container = details.closest("tr, .productListing, .row").first();
-      const titleFromAlt = container.find("img[alt]").first().attr("alt");
       if (!/\/Tontraeger\/Vinyl\//i.test(href)) return;
 
-      const title = (titleFromAlt || titleFromKinkUrl(href) || "").trim();
-      if (!title) return;
+      const title = (titleFromKinkUrl(href) || "").trim();
+      if (!title || !title.toLowerCase().includes(queryLower)) return;
 
       seen.add(href);
+      const container = details.closest("tr, .productListing, .row").first();
       const price = container.text().match(/\d+,\d{2}\s*EUR/)?.[0] || null;
 
       results.push({
@@ -56,17 +54,13 @@ async function searchKink(query, limit = 12) {
       });
     });
 
-  const queryLower = query.trim().toLowerCase();
-  const titleMatches = results.filter((item) => item.title.toLowerCase().includes(queryLower));
-  const finalResults = (titleMatches.length ? titleMatches : results).slice(0, limit);
-
   return {
     shop: SHOP.id,
     shopName: SHOP.name,
     searchUrl,
-    status: finalResults.length ? "ok" : "empty",
-    message: finalResults.length ? null : "Keine Vinyl-Treffer gefunden.",
-    results: finalResults,
+    status: results.length ? "ok" : "empty",
+    message: results.length ? null : "Keine Vinyl-Treffer mit passendem Titel gefunden.",
+    results,
   };
 }
 
