@@ -411,16 +411,19 @@ function renderShoppingList() {
         .join("")}</ul>`;
 
       return `
-        <article class="shop-panel">
-          <div class="shop-panel__head">
+        <details class="shop-panel shop-panel--shopping">
+          <summary class="shop-panel__head shop-panel__toggle">
             <div class="shop-panel__title">
               <span class="shop-dot" aria-hidden="true"></span>
               <h3>${escapeHtml(group.shopName)}</h3>
             </div>
             <div class="shop-panel__meta">${group.items.length} Treffer</div>
+            <span class="shop-panel__chevron" aria-hidden="true"></span>
+          </summary>
+          <div class="shop-panel__body">
+            ${list}
           </div>
-          ${list}
-        </article>
+        </details>
       `;
     })
     .join("");

@@ -223,6 +223,56 @@ body {
   color: var(--error);
 }
 
+.shopping-list .shop-panel--shopping > summary {
+  list-style: none;
+  cursor: pointer;
+}
+
+.shopping-list .shop-panel--shopping > summary::-webkit-details-marker {
+  display: none;
+}
+
+.shopping-list .shop-panel__toggle {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.shopping-list .shop-panel__chevron {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 1rem;
+  line-height: 1;
+  transition: transform 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.shopping-list .shop-panel__chevron::before {
+  content: "›";
+  transform: translateX(1px);
+}
+
+.shopping-list .shop-panel--shopping[open] .shop-panel__chevron {
+  transform: rotate(90deg);
+  border-color: rgba(240, 180, 41, 0.45);
+  color: #f6d889;
+}
+
+.shopping-list .shop-panel__toggle:hover .shop-panel__chevron {
+  border-color: rgba(240, 180, 41, 0.45);
+  color: #f6d889;
+}
+
+.shopping-list .shop-panel__body {
+  border-top: 1px solid var(--line);
+}
+
 .result-item__search {
   margin: 0 0 0.2rem;
   color: var(--text-muted);
