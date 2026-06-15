@@ -1,51 +1,107 @@
 const form = document.getElementById("search-form");
-const input = document.getElementById("band-input");
+const bandInput = document.getElementById("band-input");
+const albumInput = document.getElementById("album-input");
 const button = document.getElementById("search-button");
 const statusEl = document.getElementById("status");
 const resultsEl = document.getElementById("results");
 const resultsTitle = document.getElementById("results-title");
 const resultsMeta = document.getElementById("results-meta");
 const shopPanels = document.getElementById("shop-panels");
+const discogsPanel = document.getElementById("discogs-panel");
+const priceOverview = document.getElementById("price-overview");
+const sortSelect = document.getElementById("sort-select");
+const filterSelect = document.getElementById("filter-select");
+const historyEl = document.getElementById("search-history");
+
+const HISTORY_KEY = "vinyl-finder-history";
+let lastData = null;
 
 const params = new URLSearchParams(window.location.search);
-if (params.get("q")) {
-  input.value = params.get("q");
+if (params.get("band") || params.get("q")) {
+  bandInput.value = params.get("band") || params.get("q");
 }
+if (params.get("album")) {
+  albumInput.value = params.get("album");
+}
+if (params.get("sort")) {
+  sortSelect.value = params.get("sort");
+}
+if (params.get("filter")) {
+  filterSelect.value = params.get("filter");
+}
+
+renderHistory();
 
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
-  const query = input.value.trim();
-  if (!query) return;
+  const band = bandInput.value.trim();
+  const album = albumInput.value.trim();
+  if (!band) return;
 
-  const nextUrl = new URL(window.location.href);
-  nextUrl.searchParams.set("q", query);
-  window.history.replaceState({}, "", nextUrl);
-
-  await runSearch(query);
+  updateUrl({ band, album });
+  await runSearch({ band, album });
 });
 
-if (input.value.trim()) {
-  runSearch(input.value.trim());
+sortSelect.addEventListener("change", () => {
+  updateUrl({
+    band: bandInput.value.trim(),
+    album: albumInput.value.trim(),
+  });
+  if (lastData) renderResults(lastData);
+});
+
+filterSelect.addEventListener("change", () => {
+  updateUrl({
+    band: bandInput.value.trim(),
+    album: albumInput.value.trim(),
+  });
+  if (lastData) renderResults(lastData);
+});
+
+if (bandInput.value.trim()) {
+  runSearch({
+    band: bandInput.value.trim(),
+    album: albumInput.value.trim(),
+  });
 }
 
-async function runSearch(query) {
+async function runSearch({ band, album }) {
   setLoading(true);
   clearResults();
 
   try {
-    const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+    const query = new URLSearchParams({ band });
+    if (album) query.set("album", album);
+
+    const response = await fetch(`/api/search?${query.toString()}`);
     const data = await response.json();
 
     if (!response.ok) {
       throw new Error(data.error || "Suche fehlgeschlagen.");
     }
 
+    saveSearch({ band, album });
+    renderHistory();
     renderResults(data);
   } catch (error) {
     showStatus(error.message, "error");
   } finally {
     setLoading(false);
   }
+}
+
+function updateUrl({ band, album }) {
+  const nextUrl = new URL(window.location.href);
+  nextUrl.searchParams.set("band", band);
+  if (album) {
+    nextUrl.searchParams.set("album", album);
+  } else {
+    nextUrl.searchParams.delete("album");
+  }
+  nextUrl.searchParams.delete("q");
+  nextUrl.searchParams.set("sort", sortSelect.value);
+  nextUrl.searchParams.set("filter", filterSelect.value);
+  window.history.replaceState({}, "", nextUrl);
 }
 
 function setLoading(isLoading) {
@@ -68,18 +124,128 @@ function showStatus(message, type = "loading") {
 function clearResults() {
   resultsEl.hidden = true;
   shopPanels.innerHTML = "";
+  discogsPanel.hidden = true;
+  discogsPanel.innerHTML = "";
+  priceOverview.hidden = true;
+  priceOverview.innerHTML = "";
+  lastData = null;
 }
 
 function renderResults(data) {
+  lastData = data;
   resultsEl.hidden = false;
-  resultsTitle.textContent = `Treffer für „${data.query}“`;
-  resultsMeta.textContent = `${data.totalResults} Vinyl-Angebot${data.totalResults === 1 ? "" : "e"} gefunden`;
 
-  shopPanels.innerHTML = data.shops.map(renderShopPanel).join("");
+  const label = data.album ? `„${data.band}“ – „${data.album}“` : `„${data.band}“`;
+  resultsTitle.textContent = `Treffer für ${label}`;
 
-  if (!data.totalResults) {
-    showStatus("Keine Vinyl-Treffer gefunden. Probiere einen anderen Schreibweise oder öffne die Shop-Suche direkt.", "loading");
+  const visibleShops = getVisibleShops(data.shops);
+  const visibleCount = visibleShops.reduce((sum, shop) => sum + shop.results.length, 0);
+  resultsMeta.textContent = `${visibleCount} Vinyl-Angebot${visibleCount === 1 ? "" : "e"} gefunden`;
+
+  renderDiscogsPanel(data);
+  renderPriceOverview(visibleShops);
+  shopPanels.innerHTML =
+    sortSelect.value === "shop"
+      ? visibleShops.map(renderShopPanel).join("")
+      : "";
+
+  if (!visibleCount) {
+    showStatus(
+      data.album
+        ? "Keine Vinyl-Treffer mit passendem Band- und Albumnamen gefunden. Probiere eine andere Schreibweise oder öffne die Shop-Suche direkt."
+        : "Keine Vinyl-Treffer gefunden. Probiere eine andere Schreibweise oder öffne die Shop-Suche direkt.",
+      "loading"
+    );
   }
+}
+
+function getVisibleShops(shops) {
+  const includeLinks = filterSelect.value === "all";
+
+  return shops
+    .filter((shop) => includeLinks || shop.status !== "link_only")
+    .map((shop) => ({
+      ...shop,
+      results: sortItems(shop.results),
+    }));
+}
+
+function sortItems(items) {
+  const sorted = [...items];
+
+  if (sortSelect.value === "price-asc") {
+    sorted.sort((a, b) => comparePrice(a.price, b.price));
+  } else if (sortSelect.value === "price-desc") {
+    sorted.sort((a, b) => comparePrice(b.price, a.price));
+  }
+
+  return sorted;
+}
+
+function comparePrice(left, right) {
+  const a = parsePriceEuro(left);
+  const b = parsePriceEuro(right);
+  if (a === null && b === null) return 0;
+  if (a === null) return 1;
+  if (b === null) return -1;
+  return a - b;
+}
+
+function parsePriceEuro(price) {
+  if (!price) return null;
+  const match = String(price)
+    .replace(/\s/g, "")
+    .match(/(\d+)[,.](\d{2})/);
+  if (!match) return null;
+  return Number(`${match[1]}.${match[2]}`);
+}
+
+function renderDiscogsPanel(data) {
+  if (!data.discogsUrl) {
+    discogsPanel.hidden = true;
+    return;
+  }
+
+  discogsPanel.hidden = false;
+  discogsPanel.innerHTML = `
+    <div class="discogs-panel__content">
+      <div>
+        <p class="discogs-panel__eyebrow">Referenz</p>
+        <h3>Discogs</h3>
+        <p class="discogs-panel__text">
+          Pressungen, Erscheinungsjahre und alternative Schreibweisen auf Discogs prüfen.
+        </p>
+      </div>
+      <a href="${escapeHtml(data.discogsUrl)}" target="_blank" rel="noopener noreferrer">
+        Auf Discogs suchen
+      </a>
+    </div>
+  `;
+}
+
+function renderPriceOverview(shops) {
+  if (sortSelect.value === "shop") {
+    priceOverview.hidden = true;
+    priceOverview.innerHTML = "";
+    return;
+  }
+
+  const flatResults = sortItems(shops.flatMap((shop) => shop.results));
+
+  if (!flatResults.length) {
+    priceOverview.hidden = true;
+    priceOverview.innerHTML = "";
+    return;
+  }
+
+  priceOverview.hidden = false;
+  priceOverview.innerHTML = `
+    <div class="price-overview__head">
+      <h3>${sortSelect.value === "price-asc" ? "Günstigste Angebote" : "Teuerste Angebote"}</h3>
+      <p>Alle Shops, sortiert nach Preis</p>
+    </div>
+    <ul class="result-list">${flatResults.map((item) => renderResultItem(item, { showShop: true })).join("")}</ul>
+  `;
 }
 
 function renderShopPanel(shop) {
@@ -121,18 +287,67 @@ function renderShopPanel(shop) {
   `;
 }
 
-function renderResultItem(item) {
+function renderResultItem(item, { showShop = false } = {}) {
   const meta = [item.format, item.price].filter(Boolean).join(" · ");
+  const cover = item.imageUrl
+    ? `<img class="result-item__cover" src="${escapeHtml(item.imageUrl)}" alt="" loading="lazy" decoding="async" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'result-item__cover result-item__cover--placeholder'}))">`
+    : `<div class="result-item__cover result-item__cover--placeholder" aria-hidden="true"></div>`;
 
   return `
     <li class="result-item">
-      <div>
+      ${cover}
+      <div class="result-item__body">
         <p class="result-item__title">${escapeHtml(item.title)}</p>
+        ${showShop && item.shopName ? `<p class="result-item__shop">${escapeHtml(item.shopName)}</p>` : ""}
         ${meta ? `<p class="result-item__meta">${escapeHtml(meta)}</p>` : ""}
       </div>
       <a href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer">Zum Angebot</a>
     </li>
   `;
+}
+
+function saveSearch({ band, album }) {
+  const history = loadHistory().filter(
+    (entry) => entry.band !== band || entry.album !== (album || "")
+  );
+  history.unshift({ band, album: album || "" });
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(0, 10)));
+}
+
+function loadHistory() {
+  try {
+    return JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]");
+  } catch {
+    return [];
+  }
+}
+
+function renderHistory() {
+  const history = loadHistory();
+  if (!history.length) {
+    historyEl.hidden = true;
+    historyEl.innerHTML = "";
+    return;
+  }
+
+  historyEl.hidden = false;
+  historyEl.innerHTML = `
+    <span class="search-history__label">Zuletzt gesucht</span>
+    ${history
+      .map((entry) => {
+        const label = entry.album ? `${entry.band} – ${entry.album}` : entry.band;
+        return `<button type="button" class="search-history__chip" data-band="${escapeHtml(entry.band)}" data-album="${escapeHtml(entry.album)}">${escapeHtml(label)}</button>`;
+      })
+      .join("")}
+  `;
+
+  historyEl.querySelectorAll(".search-history__chip").forEach((chip) => {
+    chip.addEventListener("click", () => {
+      bandInput.value = chip.dataset.band || "";
+      albumInput.value = chip.dataset.album || "";
+      form.requestSubmit();
+    });
+  });
 }
 
 function escapeHtml(value) {

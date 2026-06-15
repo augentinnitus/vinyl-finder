@@ -1,4 +1,4 @@
-const { fetchHtml, isVinylFormat, titleMatchesQuery } = require("./utils");
+const { fetchHtml, isVinylFormat, titleMatchesQuery, resolveImageUrl } = require("./utils");
 
 function formatShopifyPrice(cents) {
   if (typeof cents !== "number") return null;
@@ -39,6 +39,7 @@ async function searchShopifyStore(shop, query, limit = 12) {
       price: formatShopifyPrice(variant?.price),
       format: "Vinyl / LP",
       url: `${shop.baseUrl}/products/${product.handle}`,
+      imageUrl: resolveImageUrl(shop.baseUrl, product.featured_image),
     });
   }
 

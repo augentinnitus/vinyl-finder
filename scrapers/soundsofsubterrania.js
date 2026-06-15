@@ -1,5 +1,5 @@
 const cheerio = require("cheerio");
-const { fetchHtml, isVinylFormat, titleMatchesQuery } = require("./utils");
+const { fetchHtml, isVinylFormat, titleMatchesQuery, findImageUrl } = require("./utils");
 
 const SHOP = {
   id: "soundsofsubterrania",
@@ -37,6 +37,7 @@ async function searchSoundsOfSubterrania(query, limit = 12) {
       price: null,
       format: isVinylFormat(title) ? title.match(/\b(LP|7"|12"|10"|2xLP|3xLP)\b/i)?.[0] || "Vinyl" : "Vinyl",
       url: href,
+      imageUrl: findImageUrl($, article, SHOP.baseUrl),
     });
   });
 

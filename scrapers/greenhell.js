@@ -1,5 +1,5 @@
 const cheerio = require("cheerio");
-const { fetchHtml, titleMatchesQuery } = require("./utils");
+const { fetchHtml, titleMatchesQuery, findImageUrl } = require("./utils");
 
 const SHOP = {
   id: "greenhell",
@@ -36,6 +36,7 @@ async function searchGreenHell(query, limit = 12) {
       price: price || null,
       url: href.startsWith("http") ? href : `${SHOP.baseUrl}${href}`,
       format: "Vinyl / LP",
+      imageUrl: findImageUrl($, root, SHOP.baseUrl),
     });
   });
 

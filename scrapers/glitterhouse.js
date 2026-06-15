@@ -1,5 +1,5 @@
 const cheerio = require("cheerio");
-const { USER_AGENT, isVinylFormat, titleMatchesQuery } = require("./utils");
+const { USER_AGENT, isVinylFormat, titleMatchesQuery, findImageUrl } = require("./utils");
 
 const SHOP = {
   id: "glitterhouse",
@@ -79,6 +79,7 @@ async function searchGlitterhouse(query, limit = 12) {
       price,
       format: "Vinyl / LP",
       url: href,
+      imageUrl: findImageUrl($, box, SHOP.baseUrl),
     });
   });
 

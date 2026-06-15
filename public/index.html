@@ -6,7 +6,7 @@
     <title>Vinyl Finder – Schallplatten in Mailorder-Shops finden</title>
     <meta
       name="description"
-      content="Suche nach Bands und finde Vinyl-Angebote bei deutschen Mailorder-Shops wie Green Hell, Bis Aufs Messer, Soundflat, Wanda Records und mehr."
+      content="Suche nach Bands und Alben und finde Vinyl-Angebote bei deutschen Mailorder-Shops wie Green Hell, Bis Aufs Messer, Soundflat, Wanda Records und mehr."
     />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -23,17 +23,32 @@
       <h1>Vinyl Finder</h1>
 
       <form id="search-form" class="search" autocomplete="off">
-        <label class="sr-only" for="band-input">Band oder Künstler</label>
-        <input
-          id="band-input"
-          name="q"
-          type="search"
-          placeholder="Deine Mutter ihre Band"
-          required
-          autofocus
-        />
+        <div class="search__fields">
+          <label class="search__field">
+            <span class="search__label">Band / Künstler</span>
+            <input
+              id="band-input"
+              name="band"
+              type="search"
+              placeholder="Deine Mutter ihre Band"
+              required
+              autofocus
+            />
+          </label>
+          <label class="search__field">
+            <span class="search__label">Album (optional)</span>
+            <input
+              id="album-input"
+              name="album"
+              type="search"
+              placeholder="z. B. Repeater"
+            />
+          </label>
+        </div>
         <button type="submit" id="search-button">Suchen</button>
       </form>
+
+      <div id="search-history" class="search-history" hidden aria-label="Letzte Suchen"></div>
 
       <div class="shop-tags" aria-label="Durchsuchte Shops">
         <span>Green Hell</span>
@@ -61,9 +76,30 @@
       <section id="status" class="status" hidden></section>
       <section id="results" class="results" hidden>
         <div class="results__header">
-          <h2 id="results-title">Treffer</h2>
-          <p id="results-meta"></p>
+          <div>
+            <h2 id="results-title">Treffer</h2>
+            <p id="results-meta"></p>
+          </div>
+          <div class="results__controls">
+            <label class="results__control">
+              <span class="results__control-label">Sortierung</span>
+              <select id="sort-select">
+                <option value="shop">Nach Shop</option>
+                <option value="price-asc">Preis aufsteigend</option>
+                <option value="price-desc">Preis absteigend</option>
+              </select>
+            </label>
+            <label class="results__control">
+              <span class="results__control-label">Anzeige</span>
+              <select id="filter-select">
+                <option value="available">Nur verfügbare Treffer</option>
+                <option value="all">Inkl. Direktlinks</option>
+              </select>
+            </label>
+          </div>
         </div>
+        <div id="discogs-panel" class="discogs-panel" hidden></div>
+        <div id="price-overview" class="price-overview" hidden></div>
         <div id="shop-panels" class="shop-panels"></div>
       </section>
     </main>

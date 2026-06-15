@@ -1,5 +1,5 @@
 const cheerio = require("cheerio");
-const { isVinylFormat, titleMatchesQuery } = require("./utils");
+const { isVinylFormat, titleMatchesQuery, findImageUrl } = require("./utils");
 
 const SHOP = {
   id: "jpc",
@@ -60,6 +60,7 @@ async function searchJpc(query, limit = 12) {
       price: price || null,
       format: medium || "LP",
       url: href.startsWith("http") ? href : `${SHOP.baseUrl}${href}`,
+      imageUrl: findImageUrl($, card, SHOP.baseUrl),
     });
   });
 

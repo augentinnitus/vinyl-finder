@@ -33,10 +33,68 @@ function isVinylFormat(text = "") {
   return false;
 }
 
+function normalizeText(value = "") {
+  return String(value).replace(/\s+/g, " ").trim();
+}
+
+function queryParts(query = "") {
+  return normalizeText(query)
+    .toLowerCase()
+    .split(/\s+/)
+    .filter(Boolean);
+}
+
 function titleMatchesQuery(title = "", query = "") {
-  const normalizedQuery = query.trim().toLowerCase();
-  if (!normalizedQuery) return false;
-  return title.toLowerCase().includes(normalizedQuery);
+  const parts = queryParts(query);
+  if (!parts.length) return false;
+  const normalizedTitle = title.toLowerCase();
+  return parts.every((part) => normalizedTitle.includes(part));
+}
+
+function titleMatchesSearch(title = "", { band = "", album = "" } = {}) {
+  const parts = [...queryParts(band), ...queryParts(album)];
+  if (!parts.length) return false;
+  const normalizedTitle = title.toLowerCase();
+  return parts.every((part) => normalizedTitle.includes(part));
+}
+
+function parsePriceEuro(price = "") {
+  const match = normalizeText(price)
+    .replace(/\s/g, "")
+    .match(/(\d+)[,.](\d{2})/);
+  if (!match) return null;
+  return Number(`${match[1]}.${match[2]}`);
+}
+
+function resolveImageUrl(baseUrl, src = "") {
+  const trimmed = String(src).trim();
+  if (!trimmed || /^data:/i.test(trimmed)) return null;
+  if (trimmed.startsWith("http")) return trimmed;
+  if (trimmed.startsWith("//")) return `https:${trimmed}`;
+  try {
+    return new URL(trimmed, baseUrl).toString();
+  } catch {
+    return null;
+  }
+}
+
+function findImageUrl($, root, baseUrl) {
+  const img = root
+    .find("img[src], img[data-src], img[data-lazy-src]")
+    .filter((_, el) => {
+      const src =
+        $(el).attr("src") || $(el).attr("data-src") || $(el).attr("data-lazy-src") || "";
+      return src && !/logo|icon|pixel|spacer|blank|placeholder/i.test(src);
+    })
+    .first();
+
+  const src = img.attr("src") || img.attr("data-src") || img.attr("data-lazy-src");
+  return resolveImageUrl(baseUrl, src);
+}
+
+function buildDiscogsUrl(band = "", album = "") {
+  const query = album ? `${band} ${album}`.trim() : band.trim();
+  return `https://www.discogs.com/de/search/?q=${encodeURIComponent(query)}&type=release`;
 }
 
 function dedupeResults(items) {
@@ -53,6 +111,12 @@ module.exports = {
   USER_AGENT,
   fetchHtml,
   isVinylFormat,
+  normalizeText,
   titleMatchesQuery,
+  titleMatchesSearch,
+  parsePriceEuro,
+  resolveImageUrl,
+  findImageUrl,
+  buildDiscogsUrl,
   dedupeResults,
 };

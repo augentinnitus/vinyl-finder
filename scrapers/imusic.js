@@ -1,5 +1,5 @@
 const cheerio = require("cheerio");
-const { fetchHtml, isVinylFormat, titleMatchesQuery } = require("./utils");
+const { fetchHtml, isVinylFormat, titleMatchesQuery, findImageUrl } = require("./utils");
 
 const SHOP = {
   id: "imusic",
@@ -36,6 +36,7 @@ async function searchImusic(query, limit = 12) {
       price,
       format: "Vinyl / LP",
       url: href.startsWith("http") ? href : `${SHOP.baseUrl}${href}`,
+      imageUrl: findImageUrl($, teaser, SHOP.baseUrl),
     });
   });
 

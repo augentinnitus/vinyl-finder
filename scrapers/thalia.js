@@ -1,5 +1,5 @@
 const cheerio = require("cheerio");
-const { fetchHtml, isVinylFormat, titleMatchesQuery } = require("./utils");
+const { fetchHtml, isVinylFormat, titleMatchesQuery, findImageUrl } = require("./utils");
 
 const SHOP = {
   id: "thalia",
@@ -49,6 +49,7 @@ async function searchThalia(query, limit = 12) {
       price,
       format: "Schallplatte",
       url: link.startsWith("http") ? link : `${SHOP.baseUrl}${link}`,
+      imageUrl: findImageUrl($, article, SHOP.baseUrl),
     });
   });
 

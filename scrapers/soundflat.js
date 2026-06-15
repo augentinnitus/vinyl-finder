@@ -1,5 +1,5 @@
 const cheerio = require("cheerio");
-const { fetchHtml, isVinylFormat, titleMatchesQuery } = require("./utils");
+const { fetchHtml, isVinylFormat, titleMatchesQuery, findImageUrl } = require("./utils");
 
 const SHOP = {
   id: "soundflat",
@@ -27,6 +27,7 @@ async function searchSoundflat(query, limit = 12) {
     if (!titleMatchesQuery(title, trimmed)) return;
 
     seen.add(href);
+    const container = link.closest(".product-layout, .caption, .product-thumb");
     const price = link.closest(".product-layout, .caption").find("p.price").first().text().trim() || null;
 
     results.push({
@@ -36,6 +37,7 @@ async function searchSoundflat(query, limit = 12) {
       price,
       format: "Vinyl / LP",
       url: href.startsWith("http") ? href : `${SHOP.baseUrl}${href}`,
+      imageUrl: findImageUrl($, container.length ? container : link.parent(), SHOP.baseUrl),
     });
   });
 

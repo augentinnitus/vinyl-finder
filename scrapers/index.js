@@ -16,7 +16,7 @@ const { searchFlight13 } = require("./flight13");
 const { searchImusic } = require("./imusic");
 const { searchThalia } = require("./thalia");
 const { searchVinylDigital } = require("./vinyldigital");
-const { dedupeResults } = require("./utils");
+const { dedupeResults, titleMatchesSearch, buildDiscogsUrl } = require("./utils");
 
 const SHOPS = [
   { id: "greenhell", name: "Green Hell", search: searchGreenHell },
@@ -39,35 +39,69 @@ const SHOPS = [
   { id: "vinyldigital", name: "Vinyl Digital", search: searchVinylDigital },
 ];
 
-async function searchAllShops(query, limitPerShop = 10) {
-  const trimmed = query.trim();
-  if (!trimmed) {
+function refineShopResult(shopResult, search) {
+  const results = shopResult.results.filter((item) =>
+    titleMatchesSearch(item.title, search)
+  );
+
+  let status = shopResult.status;
+  let message = shopResult.message;
+
+  if (status === "ok" && !results.length) {
+    status = "empty";
+    message = search.album
+      ? "Keine Vinyl-Treffer mit passendem Band- und Albumnamen gefunden."
+      : "Keine Vinyl-Treffer mit passendem Titel gefunden.";
+  }
+
+  return {
+    ...shopResult,
+    status,
+    message,
+    results,
+  };
+}
+
+async function searchAllShops({ band, album }, limitPerShop = 10) {
+  const trimmedBand = band.trim();
+  const trimmedAlbum = (album || "").trim();
+
+  if (!trimmedBand) {
     throw new Error("Bitte einen Band- oder Künstlernamen eingeben.");
   }
 
-  const shopResults = await Promise.all(
-    SHOPS.map(async (shop) => {
-      try {
-        return await shop.search(trimmed, limitPerShop);
-      } catch (error) {
-        return {
-          shop: shop.id,
-          shopName: shop.name,
-          searchUrl: null,
-          status: "error",
-          message: error.message || "Shop konnte nicht abgefragt werden.",
-          results: [],
-        };
-      }
-    })
+  const shopQuery = trimmedAlbum ? `${trimmedBand} ${trimmedAlbum}` : trimmedBand;
+  const search = { band: trimmedBand, album: trimmedAlbum };
+
+  const shopResults = (
+    await Promise.all(
+      SHOPS.map(async (shop) => {
+        try {
+          const result = await shop.search(shopQuery, limitPerShop);
+          return refineShopResult(result, search);
+        } catch (error) {
+          return {
+            shop: shop.id,
+            shopName: shop.name,
+            searchUrl: null,
+            status: "error",
+            message: error.message || "Shop konnte nicht abgefragt werden.",
+            results: [],
+          };
+        }
+      })
+    )
   );
 
   const allResults = dedupeResults(shopResults.flatMap((entry) => entry.results));
 
   return {
-    query: trimmed,
+    band: trimmedBand,
+    album: trimmedAlbum || null,
+    query: shopQuery,
     searchedAt: new Date().toISOString(),
     totalResults: allResults.length,
+    discogsUrl: buildDiscogsUrl(trimmedBand, trimmedAlbum),
     shops: shopResults,
     results: allResults,
   };

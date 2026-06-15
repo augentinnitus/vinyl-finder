@@ -1,5 +1,5 @@
 const cheerio = require("cheerio");
-const { USER_AGENT, titleMatchesQuery } = require("./utils");
+const { USER_AGENT, titleMatchesQuery, findImageUrl } = require("./utils");
 
 const SHOP = {
   id: "plasticbomb",
@@ -62,6 +62,7 @@ async function searchPlasticBomb(query, limit = 12) {
       price,
       format: "Vinyl / LP",
       url: href.startsWith("http") ? href : `${SHOP.baseUrl}${href}`,
+      imageUrl: findImageUrl($, root, SHOP.baseUrl),
     });
   });
 

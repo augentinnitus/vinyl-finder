@@ -1,5 +1,5 @@
 const cheerio = require("cheerio");
-const { fetchHtml, isVinylFormat, titleMatchesQuery } = require("./utils");
+const { fetchHtml, isVinylFormat, titleMatchesQuery, findImageUrl } = require("./utils");
 
 const SHOP = {
   id: "wanda",
@@ -40,6 +40,7 @@ async function searchWanda(query, limit = 12) {
       price,
       format: "Vinyl / LP",
       url: href.startsWith("http") ? href : `${SHOP.baseUrl}/${href.replace(/^\//, "")}`,
+      imageUrl: findImageUrl($, row.length ? row : link.parent(), SHOP.baseUrl),
     });
   });
 

@@ -1,5 +1,5 @@
 const cheerio = require("cheerio");
-const { fetchHtml, isVinylFormat, titleMatchesQuery } = require("./utils");
+const { fetchHtml, isVinylFormat, titleMatchesQuery, findImageUrl } = require("./utils");
 
 const SHOP = {
   id: "flight13",
@@ -43,6 +43,7 @@ async function searchFlight13(query, limit = 12) {
       price,
       format: "Vinyl / LP",
       url: href.startsWith("http") ? href : `${SHOP.baseUrl}${href}`,
+      imageUrl: findImageUrl($, article, SHOP.baseUrl),
     });
   });
 
