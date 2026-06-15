@@ -13,6 +13,9 @@ const { searchCoretex } = require("./coretex");
 const { searchRoughTrade } = require("./roughtrade");
 const { searchKulturkaufhaus } = require("./kulturkaufhaus");
 const { searchFlight13 } = require("./flight13");
+const { searchImusic } = require("./imusic");
+const { searchThalia } = require("./thalia");
+const { searchVinylDigital } = require("./vinyldigital");
 const { dedupeResults } = require("./utils");
 
 const SHOPS = [
@@ -31,6 +34,9 @@ const SHOPS = [
   { id: "roughtrade", name: "Rough Trade", search: searchRoughTrade },
   { id: "kulturkaufhaus", name: "Dussmann Kulturkaufhaus", search: searchKulturkaufhaus },
   { id: "flight13", name: "Flight 13", search: searchFlight13 },
+  { id: "imusic", name: "iMusic", search: searchImusic },
+  { id: "thalia", name: "Thalia", search: searchThalia },
+  { id: "vinyldigital", name: "Vinyl Digital", search: searchVinylDigital },
 ];
 
 async function searchAllShops(query, limitPerShop = 10) {
