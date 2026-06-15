@@ -205,6 +205,7 @@ body.modal-open {
   max-height: min(88vh, 920px);
   display: flex;
   flex-direction: column;
+  min-height: 0;
   overflow: hidden;
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -215,12 +216,17 @@ body.modal-open {
 .shopping-list {
   display: flex;
   flex-direction: column;
+  flex: 1;
+  min-height: 0;
   max-height: min(88vh, 920px);
   padding: 1.25rem;
 }
 
 .shopping-list__panels {
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
+  overscroll-behavior: contain;
   padding-right: 0.15rem;
 }
 
@@ -291,6 +297,10 @@ body.modal-open {
 .shopping-list__clear:hover {
   border-color: rgba(240, 138, 138, 0.45);
   color: var(--error);
+}
+
+.shopping-list .shop-panel--shopping {
+  overflow: visible;
 }
 
 .shopping-list .shop-panel--shopping > summary {
