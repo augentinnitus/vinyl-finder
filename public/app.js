@@ -12,10 +12,11 @@ const priceOverview = document.getElementById("price-overview");
 const sortSelect = document.getElementById("sort-select");
 const filterSelect = document.getElementById("filter-select");
 const historyEl = document.getElementById("search-history");
-const shoppingListEl = document.getElementById("shopping-list");
+const shoppingListModal = document.getElementById("shopping-list-modal");
 const shoppingListMeta = document.getElementById("shopping-list-meta");
 const shoppingListPanels = document.getElementById("shopping-list-panels");
 const clearShoppingListButton = document.getElementById("clear-shopping-list");
+const closeShoppingListButton = document.getElementById("close-shopping-list");
 
 const HISTORY_KEY = "vinyl-finder-history";
 let lastData = null;
@@ -39,8 +40,31 @@ renderShoppingList();
 
 clearShoppingListButton.addEventListener("click", () => {
   localStorage.removeItem(HISTORY_KEY);
+  closeShoppingListModal();
   renderHistory();
   renderShoppingList();
+});
+
+closeShoppingListButton.addEventListener("click", closeShoppingListModal);
+
+shoppingListModal.querySelectorAll("[data-close-modal]").forEach((element) => {
+  element.addEventListener("click", closeShoppingListModal);
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && isShoppingListModalOpen()) {
+    closeShoppingListModal();
+  }
+});
+
+shoppingListPanels.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-remove-item]");
+  if (!button) return;
+
+  event.preventDefault();
+  removeShoppingListItem(button.dataset.shop, button.dataset.url);
+  renderShoppingList();
+  renderHistory();
 });
 
 form.addEventListener("submit", async (event) => {
@@ -299,14 +323,25 @@ function renderShopPanel(shop) {
   `;
 }
 
-function renderResultItem(item, { showShop = false, showSearch = false } = {}) {
+function renderResultItem(item, { showShop = false, showSearch = false, removable = false } = {}) {
   const meta = [item.format, item.price].filter(Boolean).join(" · ");
   const cover = item.imageUrl
     ? `<img class="result-item__cover" src="${escapeHtml(item.imageUrl)}" alt="" loading="lazy" decoding="async" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'result-item__cover result-item__cover--placeholder'}))">`
     : `<div class="result-item__cover result-item__cover--placeholder" aria-hidden="true"></div>`;
 
+  const removeButton = removable
+    ? `<button type="button" class="result-item__remove" data-remove-item data-shop="${escapeHtml(item.shop)}" data-url="${escapeHtml(item.url)}" aria-label="Aus Einkaufsliste entfernen" title="Entfernen">×</button>`
+    : "";
+
+  const actions = removable
+    ? `<div class="result-item__actions">
+        <a href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer">Zum Angebot</a>
+        ${removeButton}
+      </div>`
+    : `<a href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer">Zum Angebot</a>`;
+
   return `
-    <li class="result-item">
+    <li class="result-item${removable ? " result-item--shopping" : ""}">
       ${cover}
       <div class="result-item__body">
         <p class="result-item__title">${escapeHtml(item.title)}</p>
@@ -314,7 +349,7 @@ function renderResultItem(item, { showShop = false, showSearch = false } = {}) {
         ${showSearch && item.searchLabel ? `<p class="result-item__search">${escapeHtml(item.searchLabel)}</p>` : ""}
         ${meta ? `<p class="result-item__meta">${escapeHtml(meta)}</p>` : ""}
       </div>
-      <a href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer">Zum Angebot</a>
+      ${actions}
     </li>
   `;
 }
@@ -361,6 +396,17 @@ function loadHistory() {
   }
 }
 
+function removeShoppingListItem(shop, url) {
+  const history = loadHistory().map((entry) => ({
+    ...entry,
+    items: Array.isArray(entry.items)
+      ? entry.items.filter((item) => !(item.shop === shop && item.url === url))
+      : entry.items,
+  }));
+
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+}
+
 function buildShoppingListByShop(history) {
   const shopMap = new Map();
 
@@ -391,27 +437,30 @@ function buildShoppingListByShop(history) {
 }
 
 function renderShoppingList() {
+  const openShops = [...shoppingListPanels.querySelectorAll("details.shop-panel--shopping[open]")].map(
+    (panel) => panel.dataset.shop
+  );
   const history = loadHistory();
   const groups = buildShoppingListByShop(history);
   const totalItems = groups.reduce((sum, group) => sum + group.items.length, 0);
 
   if (!totalItems) {
-    shoppingListEl.hidden = true;
     shoppingListPanels.innerHTML = "";
+    closeShoppingListModal();
+    renderHistory();
     return;
   }
 
-  shoppingListEl.hidden = false;
   shoppingListMeta.textContent = `${totalItems} Platte${totalItems === 1 ? "" : "n"} in ${groups.length} Shop${groups.length === 1 ? "" : "s"}`;
 
   shoppingListPanels.innerHTML = groups
     .map((group) => {
       const list = `<ul class="result-list">${group.items
-        .map((item) => renderResultItem(item, { showSearch: true }))
+        .map((item) => renderResultItem(item, { showSearch: true, removable: true }))
         .join("")}</ul>`;
 
       return `
-        <details class="shop-panel shop-panel--shopping">
+        <details class="shop-panel shop-panel--shopping" data-shop="${escapeHtml(group.shop)}">
           <summary class="shop-panel__head shop-panel__toggle">
             <div class="shop-panel__title">
               <span class="shop-dot" aria-hidden="true"></span>
@@ -427,6 +476,11 @@ function renderShoppingList() {
       `;
     })
     .join("");
+
+  for (const shopId of openShops) {
+    const panel = shoppingListPanels.querySelector(`details[data-shop="${shopId}"]`);
+    if (panel) panel.open = true;
+  }
 }
 
 function renderHistory() {
@@ -466,10 +520,30 @@ function renderHistory() {
 
   const jumpButton = document.getElementById("jump-to-shopping-list");
   if (jumpButton) {
-    jumpButton.addEventListener("click", () => {
-      shoppingListEl.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
+    jumpButton.addEventListener("click", openShoppingListModal);
   }
+}
+
+function isShoppingListModalOpen() {
+  return shoppingListModal.classList.contains("is-open");
+}
+
+function openShoppingListModal() {
+  const groups = buildShoppingListByShop(loadHistory());
+  const totalItems = groups.reduce((sum, group) => sum + group.items.length, 0);
+  if (!totalItems) return;
+
+  renderShoppingList();
+  shoppingListModal.hidden = false;
+  shoppingListModal.classList.add("is-open");
+  document.body.classList.add("modal-open");
+  closeShoppingListButton.focus();
+}
+
+function closeShoppingListModal() {
+  shoppingListModal.classList.remove("is-open");
+  shoppingListModal.hidden = true;
+  document.body.classList.remove("modal-open");
 }
 
 function escapeHtml(value) {

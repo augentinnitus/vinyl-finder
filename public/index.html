@@ -73,22 +73,6 @@
     </header>
 
     <main class="container">
-      <section id="shopping-list" class="shopping-list" hidden>
-        <div class="shopping-list__header">
-          <div>
-            <h2>Einkaufsliste</h2>
-            <p id="shopping-list-meta"></p>
-          </div>
-          <button type="button" id="clear-shopping-list" class="shopping-list__clear">
-            Liste leeren
-          </button>
-        </div>
-        <p class="shopping-list__hint">
-          Aus den letzten 10 Suchen – gegliedert nach Shop, in dem Treffer gefunden wurden.
-        </p>
-        <div id="shopping-list-panels" class="shop-panels"></div>
-      </section>
-
       <section id="status" class="status" hidden></section>
       <section id="results" class="results" hidden>
         <div class="results__header">
@@ -128,6 +112,42 @@
         blockiert werden.
       </p>
     </footer>
+
+    <div id="shopping-list-modal" class="modal" hidden>
+      <button type="button" class="modal__backdrop" data-close-modal aria-label="Einkaufsliste schließen"></button>
+      <div
+        class="modal__dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="shopping-list-title"
+      >
+        <section class="shopping-list">
+          <div class="shopping-list__header">
+            <div>
+              <h2 id="shopping-list-title">Einkaufsliste</h2>
+              <p id="shopping-list-meta"></p>
+            </div>
+            <div class="shopping-list__header-actions">
+              <button type="button" id="clear-shopping-list" class="shopping-list__clear">
+                Liste leeren
+              </button>
+              <button
+                type="button"
+                id="close-shopping-list"
+                class="shopping-list__close"
+                aria-label="Schließen"
+              >
+                ×
+              </button>
+            </div>
+          </div>
+          <p class="shopping-list__hint">
+            Aus den letzten 10 Suchen – gegliedert nach Shop, in dem Treffer gefunden wurden.
+          </p>
+          <div id="shopping-list-panels" class="shop-panels shopping-list__panels"></div>
+        </section>
+      </div>
+    </div>
 
     <script src="/app.js" defer></script>
   </body>

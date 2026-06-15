@@ -172,21 +172,90 @@ body {
   font-weight: 600;
 }
 
-.shopping-list {
-  margin-bottom: 1.5rem;
+body.modal-open {
+  overflow: hidden;
+}
+
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: 1.25rem;
+}
+
+.modal[hidden] {
+  display: none;
+}
+
+.modal__backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  padding: 0;
+  background: rgba(8, 8, 10, 0.72);
+  cursor: pointer;
+}
+
+.modal__dialog {
+  position: relative;
+  width: min(920px, 100%);
+  max-height: min(88vh, 920px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--bg-elevated);
+  box-shadow: var(--shadow);
+}
+
+.shopping-list {
+  display: flex;
+  flex-direction: column;
+  max-height: min(88vh, 920px);
+  padding: 1.25rem;
+}
+
+.shopping-list__panels {
+  overflow-y: auto;
+  padding-right: 0.15rem;
 }
 
 .shopping-list__header {
   display: flex;
   flex-wrap: wrap;
-  align-items: end;
+  align-items: start;
   justify-content: space-between;
   gap: 0.75rem 1rem;
   margin-bottom: 0.5rem;
+  flex-shrink: 0;
+}
+
+.shopping-list__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.shopping-list__close {
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--bg-card);
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.shopping-list__close:hover {
+  border-color: rgba(240, 180, 41, 0.45);
+  color: #f6d889;
 }
 
 .shopping-list h2 {
@@ -205,6 +274,7 @@ body {
   margin: 0 0 1rem;
   color: var(--text-muted);
   font-size: 0.92rem;
+  flex-shrink: 0;
 }
 
 .shopping-list__clear {
@@ -596,6 +666,30 @@ body {
   color: #f6d889;
 }
 
+.result-item__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: stretch;
+}
+
+.result-item__remove {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.55rem 0.9rem;
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.result-item__remove:hover {
+  border-color: rgba(240, 138, 138, 0.45);
+  color: var(--error);
+}
+
 .footer {
   max-width: 920px;
   margin: 0 auto;
@@ -617,8 +711,18 @@ body {
     grid-template-columns: auto 1fr;
   }
 
-  .result-item a {
+  .result-item__actions {
     grid-column: 1 / -1;
-    width: 100%;
+    flex-direction: row;
+  }
+
+  .result-item a,
+  .result-item__remove {
+    flex: 1;
+  }
+
+  .result-item a {
+    grid-column: auto;
+    width: auto;
   }
 }
