@@ -294,6 +294,22 @@ body.modal-open {
   cursor: pointer;
 }
 
+.shopping-list__export {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.55rem 0.95rem;
+  background: var(--bg-card);
+  color: var(--text-muted);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.shopping-list__export:hover {
+  border-color: rgba(240, 180, 41, 0.45);
+  color: #f6d889;
+}
+
 .shopping-list__clear:hover {
   border-color: rgba(240, 138, 138, 0.45);
   color: var(--error);

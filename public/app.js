@@ -16,6 +16,7 @@ const shoppingListModal = document.getElementById("shopping-list-modal");
 const shoppingListMeta = document.getElementById("shopping-list-meta");
 const shoppingListPanels = document.getElementById("shopping-list-panels");
 const clearShoppingListButton = document.getElementById("clear-shopping-list");
+const exportShoppingListButton = document.getElementById("export-shopping-list");
 const closeShoppingListButton = document.getElementById("close-shopping-list");
 
 const HISTORY_KEY = "vinyl-finder-history";
@@ -44,6 +45,8 @@ clearShoppingListButton.addEventListener("click", () => {
   renderHistory();
   renderShoppingList();
 });
+
+exportShoppingListButton.addEventListener("click", exportShoppingListAsTxt);
 
 closeShoppingListButton.addEventListener("click", closeShoppingListModal);
 
@@ -544,6 +547,59 @@ function closeShoppingListModal() {
   shoppingListModal.classList.remove("is-open");
   shoppingListModal.hidden = true;
   document.body.classList.remove("modal-open");
+}
+
+function formatShoppingListTxt(groups) {
+  const totalItems = groups.reduce((sum, group) => sum + group.items.length, 0);
+  const exportedAt = new Date().toLocaleString("de-DE", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+  const lines = [
+    "Vinyl Finder – Einkaufsliste",
+    `Exportiert am ${exportedAt}`,
+    "",
+    `${totalItems} Platte${totalItems === 1 ? "" : "n"} in ${groups.length} Shop${groups.length === 1 ? "" : "s"}`,
+    "",
+  ];
+
+  for (const group of groups) {
+    lines.push(group.shopName);
+    lines.push("-".repeat(group.shopName.length));
+
+    for (const item of group.items) {
+      lines.push(item.title);
+
+      const meta = [item.format, item.price].filter(Boolean).join(" · ");
+      if (meta) lines.push(meta);
+      if (item.searchLabel) lines.push(`Suche: ${item.searchLabel}`);
+      lines.push(item.url);
+      lines.push("");
+    }
+
+    lines.push("");
+  }
+
+  return lines.join("\n").trimEnd() + "\n";
+}
+
+function downloadTextFile(filename, content) {
+  const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+function exportShoppingListAsTxt() {
+  const groups = buildShoppingListByShop(loadHistory());
+  const totalItems = groups.reduce((sum, group) => sum + group.items.length, 0);
+  if (!totalItems) return;
+
+  const dateStamp = new Date().toISOString().slice(0, 10);
+  downloadTextFile(`einkaufsliste-${dateStamp}.txt`, formatShoppingListTxt(groups));
 }
 
 function escapeHtml(value) {
