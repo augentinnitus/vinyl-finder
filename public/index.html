@@ -73,6 +73,22 @@
     </header>
 
     <main class="container">
+      <section id="shopping-list" class="shopping-list" hidden>
+        <div class="shopping-list__header">
+          <div>
+            <h2>Einkaufsliste</h2>
+            <p id="shopping-list-meta"></p>
+          </div>
+          <button type="button" id="clear-shopping-list" class="shopping-list__clear">
+            Liste leeren
+          </button>
+        </div>
+        <p class="shopping-list__hint">
+          Aus den letzten 10 Suchen – gegliedert nach Shop, in dem Treffer gefunden wurden.
+        </p>
+        <div id="shopping-list-panels" class="shop-panels"></div>
+      </section>
+
       <section id="status" class="status" hidden></section>
       <section id="results" class="results" hidden>
         <div class="results__header">

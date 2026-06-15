@@ -167,6 +167,68 @@ body {
   border-color: rgba(240, 180, 41, 0.45);
 }
 
+.search-history__chip--list {
+  background: var(--accent-soft);
+  font-weight: 600;
+}
+
+.shopping-list {
+  margin-bottom: 1.5rem;
+  padding: 1.25rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--bg-elevated);
+}
+
+.shopping-list__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.shopping-list h2 {
+  margin: 0;
+  font-family: "Instrument Serif", Georgia, serif;
+  font-size: 2rem;
+  font-weight: 400;
+}
+
+#shopping-list-meta {
+  margin: 0.25rem 0 0;
+  color: var(--text-muted);
+}
+
+.shopping-list__hint {
+  margin: 0 0 1rem;
+  color: var(--text-muted);
+  font-size: 0.92rem;
+}
+
+.shopping-list__clear {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.55rem 0.95rem;
+  background: var(--bg-card);
+  color: var(--text-muted);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.shopping-list__clear:hover {
+  border-color: rgba(240, 138, 138, 0.45);
+  color: var(--error);
+}
+
+.result-item__search {
+  margin: 0 0 0.2rem;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
 .search button {
   border: 0;
   border-radius: 999px;

@@ -12,6 +12,10 @@ const priceOverview = document.getElementById("price-overview");
 const sortSelect = document.getElementById("sort-select");
 const filterSelect = document.getElementById("filter-select");
 const historyEl = document.getElementById("search-history");
+const shoppingListEl = document.getElementById("shopping-list");
+const shoppingListMeta = document.getElementById("shopping-list-meta");
+const shoppingListPanels = document.getElementById("shopping-list-panels");
+const clearShoppingListButton = document.getElementById("clear-shopping-list");
 
 const HISTORY_KEY = "vinyl-finder-history";
 let lastData = null;
@@ -31,6 +35,13 @@ if (params.get("filter")) {
 }
 
 renderHistory();
+renderShoppingList();
+
+clearShoppingListButton.addEventListener("click", () => {
+  localStorage.removeItem(HISTORY_KEY);
+  renderHistory();
+  renderShoppingList();
+});
 
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -80,8 +91,9 @@ async function runSearch({ band, album }) {
       throw new Error(data.error || "Suche fehlgeschlagen.");
     }
 
-    saveSearch({ band, album });
+    saveSearch({ band, album }, data);
     renderHistory();
+    renderShoppingList();
     renderResults(data);
   } catch (error) {
     showStatus(error.message, "error");
@@ -287,7 +299,7 @@ function renderShopPanel(shop) {
   `;
 }
 
-function renderResultItem(item, { showShop = false } = {}) {
+function renderResultItem(item, { showShop = false, showSearch = false } = {}) {
   const meta = [item.format, item.price].filter(Boolean).join(" · ");
   const cover = item.imageUrl
     ? `<img class="result-item__cover" src="${escapeHtml(item.imageUrl)}" alt="" loading="lazy" decoding="async" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'result-item__cover result-item__cover--placeholder'}))">`
@@ -299,6 +311,7 @@ function renderResultItem(item, { showShop = false } = {}) {
       <div class="result-item__body">
         <p class="result-item__title">${escapeHtml(item.title)}</p>
         ${showShop && item.shopName ? `<p class="result-item__shop">${escapeHtml(item.shopName)}</p>` : ""}
+        ${showSearch && item.searchLabel ? `<p class="result-item__search">${escapeHtml(item.searchLabel)}</p>` : ""}
         ${meta ? `<p class="result-item__meta">${escapeHtml(meta)}</p>` : ""}
       </div>
       <a href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer">Zum Angebot</a>
@@ -306,11 +319,37 @@ function renderResultItem(item, { showShop = false } = {}) {
   `;
 }
 
-function saveSearch({ band, album }) {
+function formatSearchLabel({ band, album }) {
+  return album ? `${band} – ${album}` : band;
+}
+
+function extractHistoryItems(data, band, album) {
+  return data.shops
+    .filter((shop) => shop.status === "ok" && shop.results.length > 0)
+    .flatMap((shop) =>
+      shop.results.map((result) => ({
+        shop: shop.shop,
+        shopName: shop.shopName,
+        title: result.title,
+        price: result.price || null,
+        format: result.format || null,
+        url: result.url,
+        imageUrl: result.imageUrl || null,
+        searchLabel: formatSearchLabel({ band, album }),
+      }))
+    );
+}
+
+function saveSearch({ band, album }, data) {
   const history = loadHistory().filter(
     (entry) => entry.band !== band || entry.album !== (album || "")
   );
-  history.unshift({ band, album: album || "" });
+  history.unshift({
+    band,
+    album: album || "",
+    searchedAt: data.searchedAt,
+    items: extractHistoryItems(data, band, album),
+  });
   localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(0, 10)));
 }
 
@@ -322,8 +361,76 @@ function loadHistory() {
   }
 }
 
+function buildShoppingListByShop(history) {
+  const shopMap = new Map();
+
+  for (const entry of history.slice(0, 10)) {
+    if (!Array.isArray(entry.items)) continue;
+
+    for (const item of entry.items) {
+      if (!shopMap.has(item.shop)) {
+        shopMap.set(item.shop, {
+          shop: item.shop,
+          shopName: item.shopName,
+          items: [],
+          seen: new Set(),
+        });
+      }
+
+      const group = shopMap.get(item.shop);
+      if (group.seen.has(item.url)) continue;
+
+      group.seen.add(item.url);
+      group.items.push(item);
+    }
+  }
+
+  return [...shopMap.values()]
+    .filter((group) => group.items.length > 0)
+    .sort((a, b) => a.shopName.localeCompare(b.shopName, "de"));
+}
+
+function renderShoppingList() {
+  const history = loadHistory();
+  const groups = buildShoppingListByShop(history);
+  const totalItems = groups.reduce((sum, group) => sum + group.items.length, 0);
+
+  if (!totalItems) {
+    shoppingListEl.hidden = true;
+    shoppingListPanels.innerHTML = "";
+    return;
+  }
+
+  shoppingListEl.hidden = false;
+  shoppingListMeta.textContent = `${totalItems} Platte${totalItems === 1 ? "" : "n"} in ${groups.length} Shop${groups.length === 1 ? "" : "s"}`;
+
+  shoppingListPanels.innerHTML = groups
+    .map((group) => {
+      const list = `<ul class="result-list">${group.items
+        .map((item) => renderResultItem(item, { showSearch: true }))
+        .join("")}</ul>`;
+
+      return `
+        <article class="shop-panel">
+          <div class="shop-panel__head">
+            <div class="shop-panel__title">
+              <span class="shop-dot" aria-hidden="true"></span>
+              <h3>${escapeHtml(group.shopName)}</h3>
+            </div>
+            <div class="shop-panel__meta">${group.items.length} Treffer</div>
+          </div>
+          ${list}
+        </article>
+      `;
+    })
+    .join("");
+}
+
 function renderHistory() {
   const history = loadHistory();
+  const groups = buildShoppingListByShop(history);
+  const totalItems = groups.reduce((sum, group) => sum + group.items.length, 0);
+
   if (!history.length) {
     historyEl.hidden = true;
     historyEl.innerHTML = "";
@@ -339,15 +446,27 @@ function renderHistory() {
         return `<button type="button" class="search-history__chip" data-band="${escapeHtml(entry.band)}" data-album="${escapeHtml(entry.album)}">${escapeHtml(label)}</button>`;
       })
       .join("")}
+    ${
+      totalItems
+        ? `<button type="button" class="search-history__chip search-history__chip--list" id="jump-to-shopping-list">Einkaufsliste (${totalItems})</button>`
+        : ""
+    }
   `;
 
-  historyEl.querySelectorAll(".search-history__chip").forEach((chip) => {
+  historyEl.querySelectorAll(".search-history__chip:not(.search-history__chip--list)").forEach((chip) => {
     chip.addEventListener("click", () => {
       bandInput.value = chip.dataset.band || "";
       albumInput.value = chip.dataset.album || "";
       form.requestSubmit();
     });
   });
+
+  const jumpButton = document.getElementById("jump-to-shopping-list");
+  if (jumpButton) {
+    jumpButton.addEventListener("click", () => {
+      shoppingListEl.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }
 }
 
 function escapeHtml(value) {
