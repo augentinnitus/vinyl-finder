@@ -401,7 +401,9 @@ body.modal-open {
   flex-wrap: wrap;
   justify-content: center;
   gap: 0.55rem;
-  margin-top: 1.25rem;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
 }
 
 .shop-tags span {

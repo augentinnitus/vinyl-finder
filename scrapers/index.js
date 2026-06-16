@@ -16,6 +16,7 @@ const { searchFlight13 } = require("./flight13");
 const { searchImusic } = require("./imusic");
 const { searchThalia } = require("./thalia");
 const { searchVinylDigital } = require("./vinyldigital");
+const { searchElfenart } = require("./elfenart");
 const { dedupeResults, titleMatchesSearch, buildDiscogsUrl } = require("./utils");
 
 const SHOPS = [
@@ -37,6 +38,7 @@ const SHOPS = [
   { id: "imusic", name: "iMusic", search: searchImusic },
   { id: "thalia", name: "Thalia", search: searchThalia },
   { id: "vinyldigital", name: "Vinyl Digital", search: searchVinylDigital },
+  { id: "elfenart", name: "Elfenart Mailorder", search: searchElfenart },
 ];
 
 function refineShopResult(shopResult, search) {
