@@ -12,6 +12,7 @@ const priceOverview = document.getElementById("price-overview");
 const sortSelect = document.getElementById("sort-select");
 const filterSelect = document.getElementById("filter-select");
 const historyEl = document.getElementById("search-history");
+const shoppingListToggle = document.getElementById("shopping-list-toggle");
 const shoppingListModal = document.getElementById("shopping-list-modal");
 const shoppingListMeta = document.getElementById("shopping-list-meta");
 const shoppingListPanels = document.getElementById("shopping-list-panels");
@@ -38,6 +39,8 @@ if (params.get("filter")) {
 
 renderHistory();
 renderShoppingList();
+
+shoppingListToggle.addEventListener("click", openShoppingListModal);
 
 clearShoppingListButton.addEventListener("click", () => {
   localStorage.removeItem(HISTORY_KEY);
@@ -451,10 +454,12 @@ function renderShoppingList() {
     shoppingListPanels.innerHTML = "";
     closeShoppingListModal();
     renderHistory();
+    updateShoppingListToggle();
     return;
   }
 
   shoppingListMeta.textContent = `${totalItems} Platte${totalItems === 1 ? "" : "n"} in ${groups.length} Shop${groups.length === 1 ? "" : "s"}`;
+  updateShoppingListToggle();
 
   shoppingListPanels.innerHTML = groups
     .map((group) => {
@@ -486,10 +491,22 @@ function renderShoppingList() {
   }
 }
 
+function updateShoppingListToggle() {
+  const groups = buildShoppingListByShop(loadHistory());
+  const totalItems = groups.reduce((sum, group) => sum + group.items.length, 0);
+
+  if (!totalItems) {
+    shoppingListToggle.hidden = true;
+    return;
+  }
+
+  shoppingListToggle.hidden = false;
+  shoppingListToggle.textContent = `Einkaufsliste (${totalItems})`;
+}
+
 function renderHistory() {
   const history = loadHistory();
-  const groups = buildShoppingListByShop(history);
-  const totalItems = groups.reduce((sum, group) => sum + group.items.length, 0);
+  updateShoppingListToggle();
 
   if (!history.length) {
     historyEl.hidden = true;
@@ -506,25 +523,15 @@ function renderHistory() {
         return `<button type="button" class="search-history__chip" data-band="${escapeHtml(entry.band)}" data-album="${escapeHtml(entry.album)}">${escapeHtml(label)}</button>`;
       })
       .join("")}
-    ${
-      totalItems
-        ? `<button type="button" class="search-history__chip search-history__chip--list" id="jump-to-shopping-list">Einkaufsliste (${totalItems})</button>`
-        : ""
-    }
   `;
 
-  historyEl.querySelectorAll(".search-history__chip:not(.search-history__chip--list)").forEach((chip) => {
+  historyEl.querySelectorAll(".search-history__chip").forEach((chip) => {
     chip.addEventListener("click", () => {
       bandInput.value = chip.dataset.band || "";
       albumInput.value = chip.dataset.album || "";
       form.requestSubmit();
     });
   });
-
-  const jumpButton = document.getElementById("jump-to-shopping-list");
-  if (jumpButton) {
-    jumpButton.addEventListener("click", openShoppingListModal);
-  }
 }
 
 function isShoppingListModalOpen() {

@@ -167,9 +167,31 @@ body {
   border-color: rgba(240, 180, 41, 0.45);
 }
 
-.search-history__chip--list {
-  background: var(--accent-soft);
+.shopping-list-toggle {
+  position: fixed;
+  top: 1.25rem;
+  right: 1.25rem;
+  z-index: 120;
+  border: 1px solid rgba(240, 180, 41, 0.35);
+  border-radius: 999px;
+  padding: 0.6rem 1rem;
+  background: rgba(29, 31, 37, 0.92);
+  backdrop-filter: blur(10px);
+  color: #f6d889;
+  font: inherit;
+  font-size: 0.9rem;
   font-weight: 600;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+}
+
+.shopping-list-toggle:hover {
+  border-color: rgba(240, 180, 41, 0.55);
+  transform: translateY(-1px);
+}
+
+.shopping-list-toggle[hidden] {
+  display: none;
 }
 
 body.modal-open {
